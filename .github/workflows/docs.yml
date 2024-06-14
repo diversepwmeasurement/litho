@@ -1,47 +1,49 @@
-name: Docs
-
-on:
-  push:
-    branches: [ master ]
-  workflow_dispatch:
-
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          persist-credentials: false
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'adopt'
-          java-version: 11
-      - name: Gradle caches
-        uses: actions/cache@v3
-        with:
-          path: ~/.gradle/caches
-          key: caches-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
-      - name: Gradle wrapper caches
-        uses: actions/cache@v3
-        with:
-          path: ~/.gradle/wrapper
-          key: wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+    - continue-on-error: true
+      name: Checkout
+      uses: actions/checkout@v3
+      with:
+        persist-credentials: false
+    - continue-on-error: true
+      name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: adopt
+        java-version: 11
+    - continue-on-error: true
+      name: Gradle caches
+      uses: actions/cache@v3
+      with:
+        key: caches-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+        path: ~/.gradle/caches
+    - continue-on-error: true
+      name: Gradle wrapper caches
+      uses: actions/cache@v3
+      with:
+        key: wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties')
+          }}
+        path: ~/.gradle/wrapper
+    - continue-on-error: true
+      name: Generate Reference Docs
+      run: ./gradlew dokkaHtmlMultiModule
+    - continue-on-error: true
+      name: Install and Build
+      run: 'yarn
 
-      - name: Generate Reference Docs
-        run:
-          ./gradlew dokkaHtmlMultiModule
+        yarn build
 
-      - name: Install and Build
-        run: |
-          yarn
-          yarn build
-        working-directory: website/
-
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: gh-pages
-          folder: website/build
+        '
+      working-directory: website/
+    - continue-on-error: true
+      name: Deploy
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: gh-pages
+        folder: website/build
+name: Docs
+on:
+  repository_dispatch:
+    types: trigger-ga___docs.yml
